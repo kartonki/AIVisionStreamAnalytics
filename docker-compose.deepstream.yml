@@ -1,0 +1,54 @@
+services:
+  aivision-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        DEEPSTREAM_IMAGE: ${DEEPSTREAM_IMAGE:-nvcr.io/nvidia/deepstream:7.1-triton-multiarch}
+    image: aivision-deepstream-dev:7.1
+    container_name: aivision-dev
+    working_dir: /workspace/AIVisionStreamAnalytics
+    volumes:
+      - ./:/workspace/AIVisionStreamAnalytics
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      DEEPSTREAM_PATH: /opt/nvidia/deepstream/deepstream-7.1
+      CUDA_PATH: /usr/local/cuda
+      DISPLAY: ${DISPLAY:-}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility,video,graphics
+    gpus: all
+    ipc: host
+    stdin_open: true
+    tty: true
+    command: bash
+
+  aivision-jetson-cam:
+    profiles: ["jetson"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        DEEPSTREAM_IMAGE: ${DEEPSTREAM_IMAGE_JETSON:-nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch}
+    image: aivision-deepstream-jetson-dev:7.1
+    container_name: aivision-jetson-cam
+    working_dir: /workspace/AIVisionStreamAnalytics
+    privileged: true
+    network_mode: host
+    runtime: nvidia
+    volumes:
+      - ./:/workspace/AIVisionStreamAnalytics
+      - /tmp/argus_socket:/tmp/argus_socket
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - /dev:/dev
+    environment:
+      DEEPSTREAM_PATH: /opt/nvidia/deepstream/deepstream-7.1
+      CUDA_PATH: /usr/local/cuda
+      DISPLAY: ${DISPLAY:-}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility,video,graphics
+    ipc: host
+    stdin_open: true
+    tty: true
+    command: bash

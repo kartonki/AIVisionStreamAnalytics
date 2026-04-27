@@ -40,3 +40,64 @@ $bash compile.sh
 - The center box defines the ROI for object counting
 - Directional arrows indicate the valid movement direction—only objects moving along this path are analyzed
 - A virtual line counts only those objects that cross it in the specified direction (top-to-bottom)
+
+## Docker setup (DeepStream + build dependencies)
+
+This repository now includes a containerized build environment with DeepStream and all compile dependencies.
+
+### Files added
+
+- `docker/Dockerfile` - DeepStream-based development image with compiler and GStreamer dev headers
+- `docker/entrypoint.sh` - Sets `DEEPSTREAM_PATH` and `CUDA_PATH`
+- `docker-compose.deepstream.yml` - Compose services for generic GPU and Jetson camera use
+- `scripts/container-build.sh` - Build container image
+- `scripts/container-shell.sh` - Open shell inside container
+- `scripts/container-compile.sh` - Compile this project in the container
+
+### Prerequisites on host
+
+- Docker Engine + Docker Compose v2
+- NVIDIA Container Toolkit
+- Valid access to NVIDIA NGC images (`nvcr.io`)
+
+If NGC pull fails with authorization errors, run:
+
+```bash
+docker login nvcr.io
+```
+
+### 1) Build the default DeepStream dev image
+
+```bash
+./scripts/container-build.sh
+```
+
+### 2) Open a shell in container
+
+```bash
+./scripts/container-shell.sh
+```
+
+### 3) Compile the project inside container
+
+```bash
+./scripts/container-compile.sh
+```
+
+### Jetson camera profile
+
+For CSI camera / Argus access on Jetson, use the dedicated profile and service:
+
+```bash
+docker compose -f docker-compose.deepstream.yml --profile jetson build aivision-jetson-cam
+docker compose -f docker-compose.deepstream.yml --profile jetson run --rm aivision-jetson-cam bash
+```
+
+### Optional image override
+
+Override DeepStream base image at build time:
+
+```bash
+DEEPSTREAM_IMAGE=nvcr.io/nvidia/deepstream:7.1-triton-multiarch ./scripts/container-build.sh
+DEEPSTREAM_IMAGE_JETSON=nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch docker compose -f docker-compose.deepstream.yml --profile jetson build aivision-jetson-cam
+```
